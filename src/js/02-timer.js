@@ -2,9 +2,17 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-const input = document.querySelector('#datetime-picker');
-const start = document.querySelector('[data-start]');
-start.setAttribute('disabled', 'disabled');
+const refs = {
+  input: document.querySelector('#datetime-picker'),
+  start: document.querySelector('[data-start]'),
+  days: document.querySelector('span[data-days]'),
+  hours: document.querySelector('span[data-hours]'),
+  minutes: document.querySelector('span[data-minutes]'),
+  seconds: document.querySelector('span[data-seconds]'),
+};
+
+refs.start.disabled = true;
+let userDate = null;
 
 const options = {
   enableTime: true,
@@ -12,29 +20,48 @@ const options = {
   defaultDate: new Date(),
   minuteIncrement: 1,
   onClose(selectedDates) {
-    const currentDate = Date.now();
-    let chooseDate = new Date(selectedDates[0]);
-
-    if (chooseDate < currentDate) {
+    if (selectedDates[0] < Date.now()) {
+      refs.start.disabled = true;
       Notify.failure('Please choose a date in the future.');
-      start.setAttribute('disabled', 'disabled');
-      return;
     } else {
-      start.removeAttribute('disabled');
+      refs.start.disabled = false;
+      userDate = selectedDates[0];
     }
   },
 };
 
-function startTimer() {
-  let objTime = {};
-  let differenceTime = chooseDate - Date.now();
-  intervalId = setInterval(() => {
-    if (differenceTime <= 0) {
-      clearInterval(intervalId);
+class Timer {
+  constructor() {
+    this.isActive = false;
+    this.intervalId = null;
+  }
+
+  startTimer() {
+    if (this.isActive) {
       return;
     }
-    objTime = convertMs(differenceTime);
-  });
+
+    this.isActive = true;
+    this.intervalId = setInterval(() => {
+      refs.start.disabled = true;
+      const currentTime = Date.now();
+      const diffTime = userDate - currentTime;
+      const components = convertMs(diffTime);
+
+      refs.days.textContent = addLeadingZero(components.days);
+      refs.hours.textContent = addLeadingZero(components.hours);
+      refs.minutes.textContent = addLeadingZero(components.minutes);
+      refs.seconds.textContent = addLeadingZero(components.seconds);
+
+      if (diffTime <= 0) {
+        this.stopTimer();
+      }
+    }, 1000);
+  }
+
+  stopTimer() {
+    clearInterval(this.intervalId);
+  }
 }
 
 function addLeadingZero(item) {
@@ -43,6 +70,13 @@ function addLeadingZero(item) {
 
 flatpickr('input[type=text]', options);
 
+const timer = new Timer();
+
+refs.start.addEventListener('click', () => {
+  timer.startTimer();
+});
+
+// =======================================
 function convertMs(ms) {
   // Number of milliseconds per unit of time
   const second = 1000;
@@ -61,7 +95,3 @@ function convertMs(ms) {
 
   return { days, hours, minutes, seconds };
 }
-
-console.log(convertMs(2000)); // {days: 0, hours: 0, minutes: 0, seconds: 2}
-console.log(convertMs(140000)); // {days: 0, hours: 0, minutes: 2, seconds: 20}
-console.log(convertMs(24140000)); // {days: 0, hours: 6 minutes: 42, seconds: 20}
