@@ -27,6 +27,13 @@ const options = {
     } else {
       refs.start.disabled = false;
       userDate = selectedDates[0];
+      const currentTime = Date.now();
+      const diffTime = userDate - currentTime;
+      const components = convertMs(diffTime);
+      refs.days.textContent = addLeadingZero(components.days);
+      refs.hours.textContent = addLeadingZero(components.hours);
+      refs.minutes.textContent = addLeadingZero(components.minutes);
+      refs.seconds.textContent = addLeadingZero(components.seconds);
     }
   },
 };
