@@ -16,8 +16,8 @@ function submitForm(event) {
   let delayStep = Number(refs.step.value);
   let amount = Number(refs.amount.value);
 
-  for (let i = 1; i <= amount; i += 1) {
-    createPromise(i, firstDelay)
+  for (let position = 1; position <= amount; position += 1) {
+    createPromise(position, firstDelay)
       .then(success => {
         Notify.success(success);
       })
